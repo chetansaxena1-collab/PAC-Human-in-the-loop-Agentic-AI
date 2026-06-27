@@ -1,0 +1,110 @@
+/* =========================================================
+   PAC Regulatory Intelligence Platform
+   Theme v1.0
+========================================================= */
+
+:root{
+
+    --primary:#0057B8;
+    --secondary:#003366;
+    --background:#F7FAFF;
+    --white:#FFFFFF;
+    --accent:#4DA6FF;
+
+}
+
+
+/* Whole Application */
+
+.stApp{
+
+    background-color:var(--background);
+
+}
+
+
+/* Headers */
+
+h1{
+
+    color:var(--secondary);
+
+    font-weight:700;
+
+}
+
+h2{
+
+    color:var(--primary);
+
+}
+
+h3{
+
+    color:var(--primary);
+
+}
+
+
+/* Buttons */
+
+.stButton>button{
+
+    background-color:var(--primary);
+
+    color:white;
+
+    border-radius:10px;
+
+    border:none;
+
+    padding:10px 20px;
+
+    font-weight:bold;
+
+}
+
+
+/* Button Hover */
+
+.stButton>button:hover{
+
+    background-color:var(--secondary);
+
+}
+
+
+/* Text Input */
+
+.stTextInput input{
+
+    border-radius:8px;
+
+}
+
+
+/* Text Area */
+
+textarea{
+
+    border-radius:8px;
+
+}
+
+
+/* DataFrame */
+
+[data-testid="stDataFrame"]{
+
+    border-radius:12px;
+
+}
+
+
+/* Sidebar */
+
+section[data-testid="stSidebar"]{
+
+    background:#003366;
+
+}

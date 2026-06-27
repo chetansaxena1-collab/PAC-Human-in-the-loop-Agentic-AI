@@ -34,12 +34,55 @@ COUNTRY_CONFIG = {
     },
 }
 
-st.set_page_config(page_title="Post-Approval Change Management AI", layout="wide")
-st.title("Post-Approval Change Management AI")
-st.caption("Choose a country, follow the suggested change path, then generate only the relevant regulatory output.")
+# st.set_page_config(page_title="Post-Approval Change Management AI", layout="wide")
+# st.title("Post-Approval Change Management AI")
+# st.caption("Choose a country, follow the suggested change path, then generate only the relevant regulatory output.")
+
+# ==========================================================
+# PAC BRANDING
+# ==========================================================
+
+st.set_page_config(
+    page_title="PAC Regulatory Intelligence Platform",
+    page_icon="assets/images/logo.png",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
 
-def configure_openai_api_key() -> None:
+def load_css():
+    with open("assets/css/custom.css") as f:
+        st.markdown(
+            f"<style>{f.read()}</style>",
+            unsafe_allow_html=True,
+        )
+
+
+
+# ==========================================================
+# PAC Header
+# ==========================================================
+
+col1, col2 = st.columns([1.2, 5])
+
+with col1:
+    st.image(
+        "assets/images/logo.png",
+        width=170,
+    )
+
+with col2:
+    st.title("PAC Regulatory Intelligence Platform")
+    st.markdown(
+        "### AI-Powered Human-in-the-Loop Decision Support"
+    )
+
+st.caption(
+    "Select a country, review the suggested regulatory pathway, and generate an AI-powered regulatory assessment."
+)
+
+
+def configure_openai_api_key():
     if os.environ.get("OPENAI_API_KEY"):
         return
     try:
@@ -150,36 +193,169 @@ def _build_output_table(analysis):
 
 
 def _render_analysis(analysis):
+    import time
+
     if "error" in analysis:
         st.error(analysis["error"])
         return
 
-    st.divider()
-    st.subheader("Regulatory assessment")
-    output_df = _build_output_table(analysis)
-    st.dataframe(
-        output_df,
-        hide_index=True,
-        width="stretch",
-        column_config={
-            "Information": st.column_config.TextColumn("Information", width="medium"),
-            "Result": st.column_config.TextColumn("Result", width="large"),
-        },
-    )
+    guided = analysis.get("guided_decisions", {})
 
-    country_slug = str(
-        analysis.get("selected_country") or analysis.get("market") or "regulatory"
-    ).lower().replace(" ", "_")
-    st.download_button(
-        "Download assessment as CSV",
-        data=output_df.to_csv(index=False).encode("utf-8-sig"),
-        file_name=f"{country_slug}_post_approval_assessment.csv",
-        mime="text/csv",
-        width="stretch",
-    )
+    st.divider()
+    st.subheader("📋 PAC Regulatory Assessment Report")
+    summary_placeholder = st.empty()
+    filing_placeholder = st.empty()
+    document_placeholder = st.empty()
+    process_placeholder = st.empty()
+    download_placeholder = st.empty()
+    # ==========================================================
+    # Section 1
+    # ==========================================================
+
+    with summary_placeholder.container(border=True):
+
+        st.markdown("## 📋 Assessment Summary")
+        from datetime import datetime
+
+        st.caption(
+            f"Generated on: {datetime.now():%d-%b-%Y %I:%M %p}"
+        )
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.metric(
+                "🌍 Country",
+                analysis.get("selected_country", "N/A"),
+            )
+
+            st.metric(
+                "🧪 Material Type",
+                guided.get("material_type", "N/A"),
+            )
+
+        with col2:
+            st.metric(
+                "🔄 Change Type",
+                analysis.get("change_type", "N/A"),
+            )
+
+            st.metric(
+                "📌 Reference ID",
+                analysis.get("reference_id", "N/A"),
+            )
+
+    time.sleep(0.5)
+
+    # ==========================================================
+    # Section 2
+    # ==========================================================
+
+    with filing_placeholder.container(border=True):
+
+        st.markdown("## ⚖ Filing Classification")
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+
+            st.write("**Submission Type**")
+            st.success(
+                analysis.get("procedure_type", "Not Available")
+            )
+
+        with col2:
+
+            st.write("**Impact Classification**")
+            st.info(
+                analysis.get("category", "Not Available")
+            )
+
+    time.sleep(0.5)
+
+    # ==========================================================
+    # Section 3
+    # ==========================================================
+
+    with document_placeholder.container(border=True):
+
+        st.markdown("## 📑 Required Documents")
+
+        docs = analysis.get("required_documents_list")
+
+        if docs:
+
+            if isinstance(docs, list):
+
+                for item in docs:
+
+                    st.write(f"✅ {item}")
+
+            else:
+
+                st.write(docs)
+
+        else:
+
+            st.warning("No document requirements available.")
+
+    time.sleep(0.5)
+
+    # ==========================================================
+    # Section 4
+    # ==========================================================
+
+    with process_placeholder.container(border=True):
+
+        st.markdown("## 📌 Recommended Process")
+
+        st.success(
+            analysis.get(
+                "recommended_process",
+                "Not Available",
+            )
+        )
+
+        st.markdown("### 📝 Next Actions")
+
+        st.write(
+            analysis.get(
+                "action_plan",
+                "Not Available",
+            )
+        )
+
+    time.sleep(0.5)
+
+    # ==========================================================
+    # Section 5
+    # ==========================================================
+
+    with download_placeholder.container(border=True):
+
+        st.markdown("## 📥 Export Assessment")
+
+        output_df = _build_output_table(analysis)
+
+        country_slug = (
+            str(
+                analysis.get("selected_country")
+                or "assessment"
+            )
+            .lower()
+            .replace(" ", "_")
+        )
+
+        st.download_button(
+            "📥 Download Assessment Report (CSV)",
+            data=output_df.to_csv(index=False).encode("utf-8-sig"),
+            file_name=f"{country_slug}_post_approval_assessment.csv",
+            mime="text/csv",
+            width="stretch",
+        )
 
 
 configure_openai_api_key()
+load_css()
 
 
 @st.cache_resource(show_spinner=False)
@@ -361,18 +537,68 @@ else:
 selected_reference_id = str(selected_row["reference_id"])
 user_decisions["reference_id"] = selected_reference_id
 
-st.subheader("3. Generate the relevant output")
+st.subheader("🚀 Step 3 – Generate Regulatory Assessment")
 analysis_signature = (
     selected_country,
     selected_reference_id,
     change_desc.strip(),
 )
-if st.button("Analyze selected path", type="primary", width="stretch"):
+if st.button(
+    "🚀 Analyze Regulatory Change",
+    type="primary",
+    width="stretch",
+):
     if not change_desc.strip():
         st.error("Add a change description before analysis.")
         st.stop()
 
-    with st.spinner("Analyzing the selected regulatory path..."):
+    # ----------------------------------------------------
+    # PAC AI Thinking Panel
+    # ----------------------------------------------------
+
+    with st.container(border=True):
+
+        col1, col2 = st.columns([1, 5])
+
+        with col1:
+            st.image(
+                "assets/images/assistant_avatar.png",
+                width=90,
+            )
+
+        with col2:
+            st.markdown(
+                """
+### 👩 PAC AI Assistant
+
+##### Regulatory Intelligence Engine
+"""
+            )
+
+            st.info(
+                """
+### 🧠 PAC AI is reviewing your request
+
+I'm analyzing your regulatory change request.
+
+PAC AI is currently performing:
+
+✅ Understand your requested change
+
+📚 Review country-specific regulatory guidance
+
+🔍 Identify the most relevant regulatory pathway
+
+⚖ Evaluate filing requirements
+
+📄 Preparing a regulatory intelligence assessment
+
+⏳ Please wait while I complete the assessment...
+"""
+            )
+    with st.spinner(
+        "🧠 PAC AI is preparing your regulatory assessment..."
+    ):
         analysis = orchestrate_change_analysis(
             change_desc.strip(),
             reference_df,
@@ -391,3 +617,51 @@ if (
     and st.session_state.get("latest_analysis_signature") == analysis_signature
 ):
     _render_analysis(st.session_state["latest_analysis"])
+
+# ==========================================================
+# PAC Footer
+# ==========================================================
+
+st.divider()
+
+st.markdown(
+    """
+<div style="
+text-align:center;
+padding:18px;
+font-size:14px;
+color:#666666;
+">
+
+<b>PAC Regulatory Intelligence Platform</b>
+
+<br><br>
+
+Version 1.0
+
+Enterprise AI Platform for Global Regulatory Intelligence
+
+<br><br>
+
+<b>Designed & Developed by</b>
+
+<br>
+
+<b>Chetan Saxena</b>
+
+<br>
+
+Lead Developer | Regulatory Intelligence | Artificial Intelligence
+
+<br>
+
+M.Pharm | Global Regulatory Affairs | Artificial Intelligence
+
+<br><br>
+
+© 2026 All Rights Reserved
+
+</div>
+""",
+    unsafe_allow_html=True,
+)
