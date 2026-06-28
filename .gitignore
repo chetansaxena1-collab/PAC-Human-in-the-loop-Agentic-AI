@@ -21,7 +21,24 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
+# Python
+__pycache__/
+*.pyc
 
+# Virtual Environment
+.venv/
+
+# Streamlit secrets
+.streamlit/secrets.toml
+
+# Jupyter
+.ipynb_checkpoints/
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
 # Test and coverage output
 .coverage
 .coverage.*
