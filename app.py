@@ -12,6 +12,7 @@ from agent_workflow import orchestrate_change_analysis
 from guided_decision import filter_rows_by_condition_answers, parse_conditions, unique_conditions_for_rows
 from llm_utils import NO_MATCH_MESSAGE, build_vectorstore_from_excel, load_reference_table
 from ui_matching import filter_options_by_query
+from ui.messages import show_regulatory_guidance
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 
@@ -419,7 +420,7 @@ if not change_type_query.strip():
     st.info("Type a change type to see matching suggestions.")
     st.stop()
 if not matching_change_type_options:
-    st.error(NO_MATCH_MESSAGE)
+    show_regulatory_guidance()
     st.stop()
 
 selected_change_type = _pill_selector(

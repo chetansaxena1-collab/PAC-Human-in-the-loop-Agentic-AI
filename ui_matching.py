@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import re
-from difflib import SequenceMatcher
-
+from rapidfuzz import fuzz
+FUZZY_MATCH_THRESHOLD = 90
 
 QUERY_STOPWORDS = {
     "a",
@@ -23,6 +23,18 @@ QUERY_STOPWORDS = {
     "want",
     "wnat",
     "would",
+    "can",
+    "could",
+    "should",
+    "help",
+    "me",
+    "my",
+    "our",
+    "this",
+    "that",
+    "from",
+    "with",
+    "using",
 }
 
 QUERY_SYNONYMS = {
@@ -32,8 +44,42 @@ QUERY_SYNONYMS = {
     "assay": {"test", "procedure"},
     "method": {"test", "procedure"},
     "methods": {"test", "procedure"},
-    "testing": {"test"},
     "validation": {"test", "procedure"},
+    "plant": {"manufacturing", "site"},
+    "manufacturer": {"manufacturing", "site"},
+    "facility": {"manufacturing", "site"},
+    "location": {"manufacturing", "site"},
+    "batch": {"batch", "release"},
+    "supplier": {"supplier"},
+    "source": {"supplier"},
+    "addition": {"addition"},
+    "add": {"addition"},
+    "new": {"addition"},
+    "deletion": {"deletion"},
+    "remove": {"deletion"},
+    "eliminate": {"deletion"},
+    # Manufacturing
+    "site": {"site", "manufacturing", "facility", "plant", "location"},
+    "factory": {"manufacturing", "facility", "site"},
+    "factory site": {"manufacturing", "site"},
+    "production": {"manufacturing"},
+    "production site": {"manufacturing", "site"},
+
+    # Testing
+    "laboratory": {"testing", "site"},
+    "qc": {"quality", "control", "testing"},
+    "quality control": {"testing"},
+    "quality": {"testing"},
+
+    # Batch Release
+    "batch release": {"batch", "release"},
+    "release": {"batch", "release"},
+    "release facility": {"batch", "release", "site"},
+
+    # Suppliers
+    "vendor": {"supplier"},
+    "manufacturer supplier": {"supplier"},
+    "contract manufacturer": {"manufacturing", "site"},
 }
 
 
@@ -54,8 +100,11 @@ def _token_matches(query_term: str, option_token: str) -> bool:
         return True
     if len(query_term) >= 3 and option_token.startswith(query_term):
         return True
-    if len(query_term) >= 4 and SequenceMatcher(None, query_term, option_token).ratio() >= 0.82:
+    
+    # RapidFuzz similarity
+    if fuzz.WRatio(query_term, option_token) >= FUZZY_MATCH_THRESHOLD:
         return True
+    
     return False
 
 
@@ -80,7 +129,10 @@ def _direct_match_count(option: str, query: str) -> int:
     )
 
 
-def filter_options_by_query(options, query: str) -> list[str]:
+def filter_options_by_query(
+    options: list[str],
+    query: str,
+) -> list[str]:
     query_terms = _meaningful_query_terms(query)
     if not query_terms:
         return []
