@@ -98,7 +98,7 @@ def load_reference_table(path: str) -> pd.DataFrame:
         if len(df.columns) > FILING_DESCRIPTION_COLUMN_INDEX
         else None
     )
-        normalized_source_columns = {
+    normalized_source_columns = {
         re.sub(r"\s+", " ", str(source_name)).strip(): normalized_name
         for source_name, normalized_name in SOURCE_TO_NORMALIZED_COLUMNS.items()
     }
