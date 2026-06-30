@@ -148,7 +148,7 @@ def _compact_suggestion(value):
 
 def _format_reference_option(row):
     parts = [
-        f"Ref {row.get('reference_id', 'N/A')}",
+        str(row.get("filing_description", "N/A")).strip(),
         str(row.get("procedure_type", "N/A")),
         str(row.get("change_category", "N/A")),
         str(row.get("change_scenario", "")).strip(),
@@ -527,7 +527,7 @@ else:
         for _, row in filtered_df.iterrows()
     }
     selected_reference_label = st.selectbox(
-        "Final matching workbook entry",
+        "Final matching filing description",
         list(reference_options.keys()),
     )
     selected_reference_id = reference_options[selected_reference_label]

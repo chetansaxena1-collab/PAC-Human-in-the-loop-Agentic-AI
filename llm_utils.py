@@ -9,6 +9,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple
 import pandas as pd
 
 EXCEL_HEADER_ROW = 1
+FILING_DESCRIPTION_COLUMN_INDEX = 11  # Excel column L
 
 SOURCE_TO_NORMALIZED_COLUMNS = {
     "Product Type": "product_type",
@@ -92,7 +93,12 @@ MINIMUM_ACCEPTED_MATCH_SCORE = 1.0
 def load_reference_table(path: str) -> pd.DataFrame:
     df = pd.read_excel(path, header=EXCEL_HEADER_ROW)
     df = df.dropna(axis=1, how="all")
-    normalized_source_columns = {
+    filing_description_source = (
+        df.columns[FILING_DESCRIPTION_COLUMN_INDEX]
+        if len(df.columns) > FILING_DESCRIPTION_COLUMN_INDEX
+        else None
+    )
+        normalized_source_columns = {
         re.sub(r"\s+", " ", str(source_name)).strip(): normalized_name
         for source_name, normalized_name in SOURCE_TO_NORMALIZED_COLUMNS.items()
     }
@@ -105,6 +111,13 @@ def load_reference_table(path: str) -> pd.DataFrame:
             for column in df.columns
         }
     )
+    if filing_description_source is not None:
+        normalized_column_l = normalized_source_columns.get(
+            re.sub(r"\s+", " ", str(filing_description_source)).strip(),
+            filing_description_source,
+        )
+        if normalized_column_l in df.columns:
+            df["filing_description"] = df[normalized_column_l]
 
     missing = sorted(REQUIRED_NORMALIZED_COLUMNS.difference(df.columns))
     if missing:
